@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_carga_excepcion_wizard_form" model="ir.ui.view">
+  <field name="name">carga.internacional.excepcion.wizard.form</field>
+  <field name="model">carga.internacional.excepcion.wizard</field>
+  <field name="arch" type="xml">
+    <form string="Justificacion de Excepcion de Descuadre">
+      <sheet>
+        <div class="alert alert-danger" role="alert">
+          <strong>ATENCION:</strong> Esta accion justificara los descuadres detectados y permitira
+          completar la auditoria. Esta accion queda registrada permanentemente en el historial.
+        </div>
+        <group>
+          <field name="carga_id" readonly="1"/>
+          <field name="tipo_excepcion" required="1"/>
+        </group>
+        <group string="Productos con Descuadre Afectados">
+          <field name="linea_ids" widget="many2many_tags" nolabel="1"
+                 options="{'no_create': True, 'no_edit': True}"/>
+        </group>
+        <group string="Justificacion Detallada">
+          <field name="justificacion" nolabel="1"
+                 placeholder="Explique detalladamente la razon de los descuadres. Minimo 20 caracteres."
+                 required="1"/>
+        </group>
+      </sheet>
+      <footer>
+        <button name="action_confirmar_excepcion" string="Confirmar Excepcion"
+                type="object" class="btn-danger"
+                confirm="Esta accion es irreversible. Confirmar?"/>
+        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+      </footer>
+    </form>
+  </field>
+</record>
+
+<record id="action_carga_excepcion_wizard" model="ir.actions.act_window">
+  <field name="name">Justificacion de Excepcion</field>
+  <field name="res_model">carga.internacional.excepcion.wizard</field>
+  <field name="view_mode">form</field>
+  <field name="target">new</field>
+</record>
+
+</odoo>

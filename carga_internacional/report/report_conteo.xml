@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="action_report_informe_conteo" model="ir.actions.report">
+  <field name="name">Informe de Auditoria de Carga</field>
+  <field name="model">carga.internacional</field>
+  <field name="report_type">qweb-pdf</field>
+  <field name="report_name">carga_internacional.report_informe_conteo_document</field>
+  <field name="report_file">carga_internacional.report_informe_conteo_document</field>
+  <field name="print_report_name">'Auditoria_' + object.name</field>
+  <field name="binding_type">report</field>
+  <field name="paperformat_id" ref="base.paperformat_euro"/>
+</record>
+
+<template id="report_informe_conteo_document">
+  <t t-call="web.html_container">
+    <t t-foreach="docs" t-as="o">
+      <t t-call="web.external_layout">
+        <div class="page" style="font-family: Arial, sans-serif; font-size: 12px;">
+
+          <!-- ══════════ ENCABEZADO ══════════════════════════════════════ -->
+          <div style="border-bottom: 3px solid #2c3e50; margin-bottom: 16px; padding-bottom: 10px;">
+            <h2 style="color: #2c3e50; margin: 0; text-align: center;">
+              INFORME DE AUDITORIA DE CARGA INTERNACIONAL
+            </h2>
+            <h4 style="color: #7f8c8d; text-align: center; margin: 4px 0 0 0;">
+              Conteo Fisico y Control de Recepcion
+            </h4>
+          </div>
+
+          <!-- ══════════ DATOS DE CABECERA ══════════════════════════════ -->
+          <table style="width:100%; border-collapse:collapse; margin-bottom:14px;">
+            <tr>
+              <td style="width:50%; vertical-align:top; padding-right:10px;">
+                <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                  <tr style="background:#2c3e50; color:white;">
+                    <th colspan="2" style="padding:5px 8px;">Datos de la Carga</th>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold; width:45%;">Referencia</td>
+                    <td style="padding:4px 8px;"><strong><t t-esc="o.name"/></strong></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">Proveedor Logistico</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.proveedor_logistico_id.name or '—'"/></td>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold;">Tipo Transporte</td>
+                    <td style="padding:4px 8px;">
+                      <t t-esc="'Aereo' if o.tipo_transporte == 'aereo' else 'Maritimo'"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">Nro. Factura Prov.</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.numero_factura_proveedor or '—'"/></td>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold;">Peso Total</td>
+                    <td style="padding:4px 8px;"><t t-esc="'%.3f kg' % o.peso_total"/></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">OC Vinculadas</td>
+                    <td style="padding:4px 8px;">
+                      <t t-foreach="o.purchase_order_ids" t-as="po">
+                        <span><t t-esc="po.name"/></span><t t-if="not po_last">, </t>
+                      </t>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td style="width:50%; vertical-align:top; padding-left:10px;">
+                <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                  <tr style="background:#2c3e50; color:white;">
+                    <th colspan="2" style="padding:5px 8px;">Fechas y Estado</th>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold; width:45%;">Fecha de Salida</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.fecha_salida"/></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">Fecha Est. Llegada</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.fecha_estimada_llegada"/></td>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold;">Fecha Real Recep.</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.fecha_real_recepcion or '—'"/></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">Dias de Retraso</td>
+                    <td style="padding:4px 8px;">
+                      <t t-if="o.dias_retraso &gt; 0">
+                        <span style="color:red; font-weight:bold;"><t t-esc="o.dias_retraso"/> dias de retraso</span>
+                      </t>
+                      <t t-elif="o.dias_retraso &lt; 0">
+                        <span style="color:green;"><t t-esc="abs(o.dias_retraso)"/> dias antes</span>
+                      </t>
+                      <t t-else=""><span style="color:green;">A tiempo</span></t>
+                    </td>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold;">Estado Auditoria</td>
+                    <td style="padding:4px 8px; font-weight:bold;">
+                      <t t-set="estados_audit" t-value="{'sin_auditar': 'Sin Auditar', 'en_conteo': 'En Conteo', 'descuadre': 'Descuadre', 'segundo_conteo': 'Segundo Conteo', 'excepcion': 'Excepcion Aplicada', 'auditado': 'AUDITADO'}"/>
+                      <t t-esc="estados_audit.get(o.estado_auditoria, o.estado_auditoria)"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 8px; font-weight:bold;">Auditado por</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.auditado_por_id.name or '—'"/></td>
+                  </tr>
+                  <tr style="background:#ecf0f1;">
+                    <td style="padding:4px 8px; font-weight:bold;">Fecha Auditoria</td>
+                    <td style="padding:4px 8px;"><t t-esc="o.fecha_auditoria or '—'"/></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- ══════════ TABLA DE CONTEO ═════════════════════════════════ -->
+          <div style="margin-bottom:16px;">
+            <div style="background:#2c3e50; color:white; padding:7px 12px; font-weight:bold; font-size:12px;">
+              DETALLE DE CONTEO FISICO DE PRODUCTOS
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+              <thead>
+                <tr style="background:#bdc3c7;">
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:center; width:4%;">#</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; width:11%;">Ref.</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; width:27%;">Producto</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:9%;">Cant. OC</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:9%;">Recibido</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:9%;">2do Cont.</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:9%;">Diferencia</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:10%;">Costo Unit.</th>
+                  <th style="padding:5px 4px; border:1px solid #95a5a6; text-align:right; width:12%;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="o.line_ids" t-as="line">
+                  <tr t-attf-style="background: {{ '#fde8e8' if line.tiene_descuadre else ('#e8f8e8' if line.conteo_realizado else 'white') }}">
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:center;"><t t-esc="line_index + 1"/></td>
+                    <td style="padding:4px; border:1px solid #bdc3c7;"><t t-esc="line.ref_interna or '—'"/></td>
+                    <td style="padding:4px; border:1px solid #bdc3c7;"><t t-esc="line.product_id.name"/></td>
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:right;"><t t-esc="'%.2f' % line.cantidad"/></td>
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:right;">
+                      <t t-if="line.conteo_realizado"><t t-esc="'%.2f' % line.cantidad_recibida"/></t>
+                      <t t-else="">—</t>
+                    </td>
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:right;">
+                      <t t-if="line.segundo_conteo_realizado"><t t-esc="'%.2f' % line.cantidad_segundo_conteo"/></t>
+                      <t t-else="">—</t>
+                    </td>
+                    <td t-attf-style="padding:4px; border:1px solid #bdc3c7; text-align:right; font-weight:bold; color:{{ 'red' if line.tiene_descuadre else 'green' }}">
+                      <t t-if="line.conteo_realizado">
+                        <t t-esc="'%+.2f' % line.diferencia_conteo"/>
+                      </t>
+                      <t t-else="">—</t>
+                    </td>
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:right;"><t t-esc="'%.4f' % line.costo_unitario"/></td>
+                    <td style="padding:4px; border:1px solid #bdc3c7; text-align:right;"><t t-esc="'%.2f' % line.subtotal"/></td>
+                  </tr>
+                  <t t-if="line.observacion_conteo">
+                    <tr style="background:#fffde7;">
+                      <td style="padding:3px 6px; border:1px solid #bdc3c7; color:#666; font-style:italic;" colspan="9">
+                        Obs: <t t-esc="line.observacion_conteo"/>
+                      </td>
+                    </tr>
+                  </t>
+                </t>
+                <!-- FILA DE TOTALES -->
+                <tr style="background:#2c3e50; color:white; font-weight:bold;">
+                  <td colspan="3" style="padding:6px 8px; border:1px solid #95a5a6; text-align:right;">TOTALES</td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6; text-align:right;"><t t-esc="'%.2f' % o.total_cantidad"/></td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6; text-align:right;"><t t-esc="'%.2f' % o.total_cantidad_recibida"/></td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6;"></td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6; text-align:right;">
+                    <t t-esc="'%+.2f' % (o.total_cantidad_recibida - o.total_cantidad)"/>
+                  </td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6;"></td>
+                  <td style="padding:6px 4px; border:1px solid #95a5a6; text-align:right;"><t t-esc="'%.2f' % o.total_valoracion"/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ══════════ CONDICION DE MERCANCIA ═══════════════════════════ -->
+          <t t-if="o.condicion_mercancia">
+            <div style="margin-bottom:14px;">
+              <div style="background:#2c3e50; color:white; padding:7px 12px; font-weight:bold; font-size:12px;">
+                CONDICION DE LA MERCANCIA AL MOMENTO DE LA RECEPCION
+              </div>
+              <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <tr>
+                  <td style="width:50%; padding:6px 8px; border:1px solid #bdc3c7; vertical-align:top;">
+                    <strong>Estado General:</strong>
+                    <t t-set="cond_labels" t-value="{'buena': 'Buena — Sin novedades', 'cajas_danadas': 'Cajas Danadas', 'mercancia_danada': 'Mercancia Danada', 'faltante_parcial': 'Faltante Parcial', 'sobrante': 'Sobrante', 'mixta': 'Incidencia Mixta'}"/>
+                    <br/><t t-esc="cond_labels.get(o.condicion_mercancia, o.condicion_mercancia)"/>
+                  </td>
+                  <td style="width:50%; padding:6px 8px; border:1px solid #bdc3c7; vertical-align:top;">
+                    <strong>Control de Cajas:</strong><br/>
+                    Esperadas: <t t-esc="o.cantidad_cajas_total"/> |
+                    Recibidas: <t t-esc="o.cantidad_cajas_recibidas"/> |
+                    <span t-if="o.cantidad_cajas_danadas &gt; 0" style="color:red; font-weight:bold;">
+                      Danadas: <t t-esc="o.cantidad_cajas_danadas"/>
+                    </span>
+                    <t t-else=""><span>Danadas: 0</span></t>
+                  </td>
+                </tr>
+                <t t-if="o.condicion_detalle">
+                  <tr>
+                    <td colspan="2" style="padding:6px 8px; border:1px solid #bdc3c7;">
+                      <strong>Detalle de Condicion / Incidencias:</strong><br/>
+                      <t t-esc="o.condicion_detalle"/>
+                    </td>
+                  </tr>
+                </t>
+              </table>
+            </div>
+          </t>
+
+          <!-- ══════════ INCIDENCIAS ════════════════════════════════════════ -->
+          <t t-if="o.incidencia_ids">
+            <div style="margin-bottom:14px;">
+              <div style="background:#c0392b; color:white; padding:7px 12px; font-weight:bold; font-size:12px;">
+                INCIDENCIAS REGISTRADAS (<t t-esc="len(o.incidencia_ids)"/>)
+              </div>
+              <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                <thead>
+                  <tr style="background:#fadbd8;">
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:13%;">Fecha</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:15%;">Tipo</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:18%;">Producto Afectado</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:8%; text-align:right;">Cant.</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:30%;">Descripcion</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:8%; text-align:center;">Resuelto</th>
+                    <th style="padding:5px 4px; border:1px solid #e74c3c; width:8%;">Reportado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <t t-foreach="o.incidencia_ids" t-as="inc">
+                    <t t-set="tipo_labels" t-value="{'caja_danada': 'Caja Danada', 'mercancia_danada': 'Mercancia Danada', 'faltante': 'Faltante', 'sobrante': 'Sobrante', 'producto_incorrecto': 'Prod. Incorrecto', 'empaque_deficiente': 'Empaque Deficiente', 'humedad': 'Humedad', 'otro': 'Otro'}"/>
+                    <tr t-attf-style="background: {{ '#fef9f9' if not inc.resuelto else 'white' }}">
+                      <td style="padding:4px; border:1px solid #e74c3c;"><t t-esc="inc.fecha"/></td>
+                      <td style="padding:4px; border:1px solid #e74c3c; font-weight:bold;"><t t-esc="tipo_labels.get(inc.tipo, inc.tipo)"/></td>
+                      <td style="padding:4px; border:1px solid #e74c3c;"><t t-esc="inc.product_id.name or '—'"/></td>
+                      <td style="padding:4px; border:1px solid #e74c3c; text-align:right;"><t t-esc="'%.2f' % inc.cantidad_afectada if inc.cantidad_afectada else '—'"/></td>
+                      <td style="padding:4px; border:1px solid #e74c3c;"><t t-esc="inc.descripcion"/></td>
+                      <td style="padding:4px; border:1px solid #e74c3c; text-align:center; font-weight:bold;">
+                        <t t-if="inc.resuelto"><span style="color:green;">SI</span></t>
+                        <t t-else=""><span style="color:red;">NO</span></t>
+                      </td>
+                      <td style="padding:4px; border:1px solid #e74c3c;"><t t-esc="inc.reportado_por_id.name or '—'"/></td>
+                    </tr>
+                    <t t-if="inc.resolucion">
+                      <tr style="background:#eafaf1;">
+                        <td colspan="7" style="padding:3px 6px; border:1px solid #e74c3c; color:#27ae60; font-style:italic;">
+                          Resolucion: <t t-esc="inc.resolucion"/>
+                        </td>
+                      </tr>
+                    </t>
+                  </t>
+                </tbody>
+              </table>
+            </div>
+          </t>
+
+          <!-- ══════════ EXCEPCION ══════════════════════════════════════════ -->
+          <t t-if="o.excepcion_justificada">
+            <div style="margin-bottom:14px;">
+              <div style="background:#e67e22; color:white; padding:7px 12px; font-weight:bold; font-size:12px;">
+                EXCEPCION APLICADA POR DESCUADRE
+              </div>
+              <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <tr style="background:#fef5e7;">
+                  <td style="padding:6px 8px; border:1px solid #f39c12; width:35%;">
+                    <strong>Autorizado por:</strong> <t t-esc="o.excepcion_usuario_id.name or '—'"/><br/>
+                    <strong>Fecha:</strong> <t t-esc="o.excepcion_fecha or '—'"/>
+                  </td>
+                  <td style="padding:6px 8px; border:1px solid #f39c12;">
+                    <strong>Justificacion:</strong><br/>
+                    <t t-esc="o.excepcion_justificacion or '—'"/>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </t>
+
+          <!-- ══════════ FIRMAS ══════════════════════════════════════════════ -->
+          <div style="margin-top:30px;">
+            <table style="width:100%; border-collapse:collapse;">
+              <tr>
+                <td style="width:30%; text-align:center; padding-top:40px; border-top:1px solid #2c3e50;">
+                  <strong>Operador de Recepcion</strong><br/>
+                  <small>Nombre / Firma / Fecha</small>
+                </td>
+                <td style="width:5%;"></td>
+                <td style="width:30%; text-align:center; padding-top:40px; border-top:1px solid #2c3e50;">
+                  <strong>Supervisor de Almacen</strong><br/>
+                  <small>Nombre / Firma / Fecha</small>
+                </td>
+                <td style="width:5%;"></td>
+                <td style="width:30%; text-align:center; padding-top:40px; border-top:1px solid #2c3e50;">
+                  <strong>Responsable de Compras</strong><br/>
+                  <small>Nombre / Firma / Fecha</small>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Pie de pagina del documento -->
+          <div style="margin-top:20px; text-align:center; font-size:9px; color:#7f8c8d; border-top:1px solid #ecf0f1; padding-top:6px;">
+            Documento generado el <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/> |
+            Carga: <t t-esc="o.name"/> | Estado: <t t-esc="o.estado_auditoria"/>
+          </div>
+
+        </div>
+      </t>
+    </t>
+  </t>
+</template>
+
+</odoo>

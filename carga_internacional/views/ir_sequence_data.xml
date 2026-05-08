@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            Secuencia base: Odoo la replica automáticamente por empresa
+            gracias a company_id=False (global) + uso de with_company() en create().
+            Si se prefiere una secuencia dedicada por empresa, crearlas manualmente
+            desde Ajustes > Secuencias con el mismo código.
+        -->
+        <record id="seq_carga_internacional" model="ir.sequence">
+            <field name="name">Carga Internacional</field>
+            <field name="code">carga.internacional</field>
+            <field name="prefix">CARGA/%(year)s/</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="use_date_range">False</field>
+            <!-- company_id=False hace que sea la secuencia global compartida.
+                 Cada empresa puede tener la propia creando otra con el mismo código. -->
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

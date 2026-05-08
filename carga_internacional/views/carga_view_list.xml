@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_carga_internacional_list" model="ir.ui.view">
+  <field name="name">carga.internacional.list</field>
+  <field name="model">carga.internacional</field>
+  <field name="arch" type="xml">
+    <list string="Cargas Internacionales"
+          decoration-success="estado == 'recibido' and estado_auditoria == 'auditado'"
+          decoration-warning="estado == 'en_camino' or estado_auditoria == 'en_conteo'"
+          decoration-danger="estado_auditoria in ('descuadre','segundo_conteo')"
+          decoration-info="estado_auditoria in ('excepcion','seriales_pendientes')">
+      <field name="name"/>
+      <field name="company_id" groups="base.group_multi_company" optional="show"/>
+      <field name="urgente" widget="priority"/>
+      <field name="proveedor_logistico_id"/>
+      <field name="tipo_transporte"/>
+      <field name="fecha_salida"/>
+      <field name="fecha_estimada_llegada"/>
+      <field name="fecha_real_recepcion" optional="show"/>
+      <field name="dias_retraso" optional="show"
+             decoration-danger="dias_retraso &gt; 0"
+             decoration-success="dias_retraso &lt;= 0"/>
+      <field name="total_cantidad"/>
+      <field name="total_cantidad_recibida" optional="show"
+             decoration-danger="total_cantidad_recibida != total_cantidad and total_cantidad_recibida != 0"/>
+      <field name="total_valoracion" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+      <field name="currency_id" column_invisible="1"/>
+      <field name="requiere_seriales" column_invisible="1"/>
+      <field name="estado" widget="badge"
+             decoration-success="estado == 'recibido'"
+             decoration-warning="estado in ('en_camino','en_conteo')"
+             decoration-info="estado == 'preparando'"/>
+      <field name="estado_auditoria" widget="badge"
+             decoration-success="estado_auditoria == 'auditado'"
+             decoration-danger="estado_auditoria in ('descuadre','segundo_conteo')"
+             decoration-warning="estado_auditoria in ('en_conteo','excepcion','seriales_pendientes')"
+             decoration-muted="estado_auditoria == 'sin_auditar'"/>
+    </list>
+  </field>
+</record>
+
+<record id="view_carga_internacional_kanban" model="ir.ui.view">
+  <field name="name">carga.internacional.kanban</field>
+  <field name="model">carga.internacional</field>
+  <field name="arch" type="xml">
+    <kanban default_group_by="estado" class="o_kanban_small_column">
+      <field name="name"/>
+      <field name="estado"/>
+      <field name="estado_auditoria"/>
+      <field name="urgente"/>
+      <field name="proveedor_logistico_id"/>
+      <field name="tipo_transporte"/>
+      <field name="fecha_estimada_llegada"/>
+      <field name="total_valoracion"/>
+      <field name="tiene_descuadre"/>
+      <field name="requiere_seriales"/>
+      <field name="currency_id"/>
+      <templates>
+        <t t-name="card">
+          <div class="oe_kanban_card oe_kanban_global_click">
+            <div class="o_kanban_record_top">
+              <strong><field name="name"/></strong>
+              <field name="urgente" widget="priority"/>
+            </div>
+            <div class="o_kanban_record_body">
+              <span class="text-muted"><field name="proveedor_logistico_id"/></span><br/>
+              <span>Tipo: <field name="tipo_transporte"/></span><br/>
+              <span>ETA: <field name="fecha_estimada_llegada"/></span><br/>
+              <span t-if="record.tiene_descuadre.raw_value" class="badge badge-danger">DESCUADRE</span>
+              <span t-if="record.requiere_seriales.raw_value"
+                    class="badge badge-warning">CON SERIALES</span>
+            </div>
+            <div class="o_kanban_record_bottom">
+              <field name="total_valoracion" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+              <field name="estado_auditoria" widget="badge"/>
+            </div>
+          </div>
+        </t>
+      </templates>
+    </kanban>
+  </field>
+</record>
+
+<record id="view_carga_internacional_search" model="ir.ui.view">
+  <field name="name">carga.internacional.search</field>
+  <field name="model">carga.internacional</field>
+  <field name="arch" type="xml">
+    <search string="Buscar Carga Internacional">
+      <field name="name" string="Referencia"/>
+      <field name="proveedor_logistico_id"/>
+      <field name="numero_factura_proveedor"/>
+      <field name="numero_bl_awb"/>
+      <field name="purchase_order_ids"/>
+      <separator/>
+      <filter name="preparando" string="Preparando" domain="[('estado','=','preparando')]"/>
+      <filter name="en_camino" string="En Camino" domain="[('estado','=','en_camino')]"/>
+      <filter name="en_conteo" string="En Conteo" domain="[('estado','=','en_conteo')]"/>
+      <filter name="recibido" string="Recibido" domain="[('estado','=','recibido')]"/>
+      <separator/>
+      <filter name="seriales_pendientes" string="Seriales Pendientes"
+              domain="[('estado_auditoria','=','seriales_pendientes')]"/>
+      <filter name="descuadre" string="Con Descuadre"
+              domain="[('estado_auditoria','in',['descuadre','segundo_conteo'])]"/>
+      <filter name="auditado" string="Auditado" domain="[('estado_auditoria','=','auditado')]"/>
+      <separator/>
+      <filter name="urgentes" string="Urgentes" domain="[('urgente','in',['1','2','3'])]"/>
+      <filter name="con_retraso" string="Con Retraso" domain="[('dias_retraso','&gt;',0)]"/>
+      <separator/>
+      <filter name="requiere_seriales" string="Con Seriales" domain="[('requiere_seriales','=',True)]"/>
+      <separator/>
+      <filter name="aereo" string="Aéreo" domain="[('tipo_transporte','=','aereo')]"/>
+      <filter name="maritimo" string="Marítimo" domain="[('tipo_transporte','=','maritimo')]"/>
+      <group expand="0" string="Agrupar Por">
+        <filter name="group_estado" string="Estado" context="{'group_by': 'estado'}"/>
+        <filter name="group_auditoria" string="Estado Auditoría" context="{'group_by': 'estado_auditoria'}"/>
+        <filter name="group_transporte" string="Tipo de Transporte" context="{'group_by': 'tipo_transporte'}"/>
+        <filter name="group_proveedor" string="Proveedor Logístico" context="{'group_by': 'proveedor_logistico_id'}"/>
+        <filter name="group_mes" string="Mes de Salida" context="{'group_by': 'fecha_salida:month'}"/>
+      </group>
+    </search>
+  </field>
+</record>
+
+<record id="action_carga_internacional" model="ir.actions.act_window">
+  <field name="name">Cargas Internacionales</field>
+  <field name="res_model">carga.internacional</field>
+  <field name="view_mode">list,kanban,form</field>
+  <field name="search_view_id" ref="view_carga_internacional_search"/>
+  <field name="context">{}</field>
+  <field name="help" type="html">
+    <p class="o_view_nocontent_smiling_face">Crea tu primera Carga Internacional</p>
+    <p>Gestiona importaciones con conteo físico, seriales y trazabilidad completa.</p>
+  </field>
+</record>
+
+</odoo>

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_carga_internacional_form" model="ir.ui.view">
+  <field name="name">carga.internacional.form</field>
+  <field name="model">carga.internacional</field>
+  <field name="arch" type="xml">
+    <form string="Carga Internacional">
+      <header>
+        <!-- Flujo principal -->
+        <button name="action_en_camino" string="En Camino" type="object"
+                class="btn-primary" invisible="estado != 'preparando'"/>
+        <button name="action_iniciar_conteo" string="Llegó — Iniciar Conteo" type="object"
+                class="btn-primary" invisible="estado != 'en_camino'"
+                confirm="La carga llegó físicamente. ¿Iniciar el conteo?"/>
+        <button name="action_revertir_a_en_camino" string="Volver a En Camino" type="object"
+                invisible="estado != 'en_conteo'"/>
+        <button name="action_recibido" string="✔ Confirmar Recepción en Inventario" type="object"
+                class="btn-success"
+                invisible="estado != 'en_conteo' or estado_auditoria not in ('auditado','excepcion')"
+                confirm="Se validarán las recepciones en Odoo. ¿Confirmar?"/>
+        <button name="action_preparando" string="Regresar a Preparando" type="object"
+                invisible="estado != 'en_camino'"/>
+
+        <!-- Flujo de conteo -->
+        <button name="action_confirmar_primer_conteo" string="Confirmar 1er Conteo" type="object"
+                class="btn-primary" invisible="estado_auditoria != 'en_conteo'"
+                confirm="¿Confirmar el primer conteo?"/>
+        <button name="action_solicitar_segundo_conteo" string="Solicitar 2do Conteo" type="object"
+                class="btn-warning" invisible="estado_auditoria != 'descuadre'"/>
+        <button name="action_confirmar_segundo_conteo" string="Confirmar 2do Conteo" type="object"
+                class="btn-primary" invisible="estado_auditoria != 'segundo_conteo'"
+                confirm="¿Confirmar el segundo conteo?"/>
+        <button name="action_aplicar_excepcion" string="Aplicar Excepción" type="object"
+                class="btn-danger" invisible="estado_auditoria not in ('descuadre','segundo_conteo')"/>
+        <button name="action_marcar_auditado" string="Marcar Auditado" type="object"
+                class="btn-success" invisible="estado_auditoria != 'excepcion'"/>
+        <button name="action_imprimir_informe_conteo" string="Imprimir Informe" type="object"
+                class="btn-secondary"/>
+
+        <field name="estado" widget="statusbar"
+               statusbar_visible="preparando,en_camino,en_conteo,recibido"/>
+      </header>
+
+      <sheet>
+        <!-- Banners -->
+        <div class="alert alert-info" role="alert"
+             invisible="estado != 'en_conteo' or estado_auditoria != 'en_conteo'">
+          <strong>EN CONTEO FÍSICO</strong> — Ingrese las cantidades recibidas y presione
+          "Confirmar 1er Conteo".
+        </div>
+        <div class="alert alert-warning" role="alert"
+             invisible="not requiere_seriales or estado not in ('en_conteo','recibido')">
+          <i class="fa fa-barcode me-1"/> <strong>Este envío contiene productos con número de serie o lote.</strong>
+          Los seriales se ingresan directamente en la recepción de inventario (WH/IN).
+          <button name="action_ver_recepciones" string="Abrir WH/IN" type="object"
+                  class="btn-sm btn-warning ms-2"/>
+        </div>
+        <div class="alert alert-danger" role="alert"
+             invisible="estado_auditoria not in ('descuadre','segundo_conteo')">
+          <strong>DESCUADRE DETECTADO</strong> — Se requiere segundo conteo o excepción justificada.
+        </div>
+        <div class="alert alert-warning" role="alert"
+             invisible="estado_auditoria != 'excepcion'">
+          <strong>EXCEPCIÓN APLICADA</strong> — Puede confirmar la recepción en inventario.
+        </div>
+        <div class="alert alert-success" role="alert"
+             invisible="estado != 'recibido'">
+          <strong>RECEPCIÓN COMPLETADA.</strong>
+          <span invisible="not auditado_por_id">
+            Auditado por <field name="auditado_por_id" readonly="1" nolabel="1"/>
+            el <field name="fecha_auditoria" readonly="1" nolabel="1"/>.
+          </span>
+        </div>
+        <div class="alert alert-info" role="alert"
+             invisible="picking_state != 'sin_recepciones' or estado in ('preparando','en_camino')">
+          <strong>SIN RECEPCIONES VINCULADAS</strong> —
+          <button name="action_adoptar_recepciones" string="Sincronizar" type="object"
+                  class="btn-sm btn-info ms-2"/>
+        </div>
+
+        <!-- Smart buttons -->
+        <div class="oe_button_box" name="button_box">
+          <button name="action_ver_recepciones" type="object"
+                  class="oe_stat_button" icon="fa-truck">
+            <div class="o_stat_info">
+              <span class="o_stat_value"><field name="picking_count"/></span>
+              <span class="o_stat_text">Recepciones</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="oe_title">
+          <h1><field name="name" readonly="1"/></h1>
+        </div>
+        <group><field name="urgente" widget="priority" nolabel="1"/></group>
+
+        <group>
+          <group string="Información General">
+            <field name="company_id" options="{'no_create': True}" readonly="estado != 'preparando'"/>
+            <field name="proveedor_logistico_id" options="{'no_create': True}"
+                   context="{'default_company_id': company_id}"/>
+            <field name="tipo_transporte"/>
+            <field name="numero_factura_proveedor"/>
+            <field name="numero_bl_awb"/>
+            <field name="incoterm_id" options="{'no_create': True}"/>
+            <field name="peso_total"/>
+            <field name="volumen_total"/>
+          </group>
+          <group string="Ruta y Fechas">
+            <field name="puerto_origen"/>
+            <field name="puerto_destino"/>
+            <field name="fecha_salida"/>
+            <field name="fecha_estimada_llegada"/>
+            <field name="fecha_real_recepcion" invisible="estado != 'recibido'"/>
+            <field name="dias_retraso" invisible="estado != 'recibido'"
+                   decoration-danger="dias_retraso &gt; 0"
+                   decoration-success="dias_retraso &lt;= 0"/>
+            <field name="currency_id" invisible="1"/>
+            <field name="estado_auditoria" widget="badge"
+                   decoration-success="estado_auditoria == 'auditado'"
+                   decoration-danger="estado_auditoria in ('descuadre','segundo_conteo')"
+                   decoration-warning="estado_auditoria in ('en_conteo','excepcion')"
+                   decoration-muted="estado_auditoria == 'sin_auditar'"/>
+            <field name="picking_state" widget="badge"
+                   decoration-success="picking_state == 'completo'"
+                   decoration-warning="picking_state == 'parcial'"
+                   decoration-danger="picking_state == 'sin_recepciones'"
+                   decoration-info="picking_state == 'pendiente'"
+                   invisible="estado == 'preparando'"/>
+            <field name="requiere_seriales" widget="boolean" invisible="1"/>
+          </group>
+        </group>
+
+        <notebook>
+
+          <!-- Órdenes de Compra -->
+          <page string="Órdenes de Compra">
+            <field name="purchase_order_ids" widget="many2many_tags"
+                   options="{'no_create': True}"
+                   domain="[('state','in',['purchase','done']),('company_id','=',company_id)]"
+                   context="{'default_company_id': company_id}"/>
+            <div class="mt-2">
+              <button name="action_adoptar_recepciones" string="Sincronizar Recepciones"
+                      type="object" class="btn btn-outline-secondary btn-sm"
+                      invisible="not purchase_order_ids"/>
+            </div>
+            <field name="picking_ids" widget="many2many_tags"
+                   options="{'no_create': True}" readonly="1"
+                   invisible="not picking_ids" string="Recepciones vinculadas"/>
+          </page>
+
+          <!-- Líneas de Carga -->
+          <page string="Líneas de Carga">
+            <field name="line_ids">
+              <list editable="bottom"
+                    decoration-danger="tiene_descuadre == True"
+                    decoration-success="conteo_realizado == True and tiene_descuadre == False"
+                    decoration-warning="tracking in ('serial','lot')">
+                <field name="sequence" widget="handle"/>
+                <field name="product_id" options="{'no_create': True}"/>
+                <field name="ref_interna" optional="show"/>
+                <field name="tracking" widget="badge"
+                       decoration-warning="tracking in ('serial','lot')"
+                       decoration-muted="tracking == 'none'"
+                       optional="show"/>
+                <field name="cantidad"/>
+                <field name="cantidad_recibida"/>
+                <field name="conteo_realizado" widget="boolean_toggle"/>
+                <field name="diferencia_conteo" readonly="1"
+                       decoration-danger="diferencia_conteo != 0"
+                       decoration-success="diferencia_conteo == 0 and conteo_realizado == True"/>
+                <field name="cantidad_segundo_conteo" optional="show"/>
+                <field name="segundo_conteo_realizado" widget="boolean_toggle" optional="show"/>
+                <field name="observacion_conteo" optional="show"/>
+                <field name="costo_unitario" optional="show"/>
+                <field name="subtotal" readonly="1" optional="show"/>
+                <field name="tiene_descuadre" column_invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="purchase_line_id" column_invisible="1"/>
+              </list>
+            </field>
+            <group class="oe_subtotal_footer">
+              <field name="total_cantidad" string="Total Pedido" readonly="1"/>
+              <field name="total_cantidad_recibida" string="Total Recibido" readonly="1"
+                     decoration-danger="total_cantidad_recibida != total_cantidad"/>
+              <field name="total_valoracion" string="Valoración Total" readonly="1"
+                     widget="monetary" options="{'currency_field': 'currency_id'}"/>
+            </group>
+          </page>
+
+          <!-- Condición de Mercancía -->
+          <page string="Condición de Mercancía">
+            <group>
+              <group string="Estado Físico">
+                <field name="condicion_mercancia" widget="radio"/>
+                <field name="condicion_detalle"
+                       placeholder="Describa el estado de la mercancía..."/>
+              </group>
+              <group string="Control de Cajas">
+                <field name="cantidad_cajas_total"/>
+                <field name="cantidad_cajas_recibidas"/>
+                <field name="cantidad_cajas_danadas"
+                       decoration-danger="cantidad_cajas_danadas &gt; 0"/>
+              </group>
+            </group>
+            <group string="Evidencia Fotográfica">
+              <field name="foto_evidencia" widget="image"
+                     options="{'max_width': 600, 'max_height': 400}" nolabel="1"/>
+              <field name="foto_evidencia_nombre" invisible="not foto_evidencia"/>
+            </group>
+          </page>
+
+          <!-- Incidencias -->
+          <page string="Incidencias">
+            <field name="incidencia_ids" readonly="False">
+              <list editable="bottom"
+                    decoration-danger="not resuelto"
+                    decoration-success="resuelto == True">
+                <field name="fecha"/>
+                <field name="tipo"/>
+                <field name="product_id" optional="show"
+                       domain="[('id', 'in', parent.product_ids)]"/>
+                <field name="cantidad_afectada" optional="show"/>
+                <field name="descripcion"/>
+                <field name="reportado_por_id" optional="show"/>
+                <field name="resuelto" widget="boolean_toggle"/>
+                <field name="resolucion" optional="show"/>
+              </list>
+            </field>
+          </page>
+
+          <!-- Excepción Aplicada -->
+          <page string="Excepción Aplicada" invisible="not excepcion_justificada">
+            <group>
+              <field name="excepcion_usuario_id" readonly="1"/>
+              <field name="excepcion_fecha" readonly="1"/>
+              <field name="excepcion_justificacion" readonly="1"/>
+            </group>
+          </page>
+
+          <!-- Notas -->
+          <page string="Notas Internas">
+            <field name="notas" placeholder="Observaciones internas..."/>
+          </page>
+
+        </notebook>
+      </sheet>
+      <chatter/>
+    </form>
+  </field>
+</record>
+
+</odoo>

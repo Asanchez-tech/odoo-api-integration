@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_carga_internacional_user,carga.internacional user,model_carga_internacional,base.group_user,1,1,1,1
+access_carga_internacional_line_user,carga.internacional.line user,model_carga_internacional_line,base.group_user,1,1,1,1
+access_carga_incidencia_user,carga.internacional.incidencia user,model_carga_internacional_incidencia,base.group_user,1,1,1,1
+access_carga_excepcion_wizard_user,carga.excepcion.wizard user,model_carga_internacional_excepcion_wizard,base.group_user,1,1,1,0

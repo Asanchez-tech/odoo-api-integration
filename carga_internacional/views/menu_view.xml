@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        IMPORTANTE Odoo 18:
+        - El menuitem raiz DEBE tener web_icon para aparecer en la pantalla Home de Apps
+        - El formato es: 'nombre_modulo,ruta/relativa/al/icono.png'
+        - Sin esto el modulo se instala pero NO aparece en el listado de aplicaciones
+    -->
+
+    <!-- Menu raiz: aparece en la pantalla Home como icono de App -->
+    <menuitem
+        id="menu_carga_internacional_root"
+        name="Carga Internacional"
+        web_icon="carga_internacional,static/description/icon.png"
+        sequence="95"/>
+
+    <!-- Nivel 1: cabecera dentro de la app -->
+    <menuitem
+        id="menu_carga_internacional_main"
+        name="Cargas"
+        parent="menu_carga_internacional_root"
+        sequence="10"/>
+
+    <!-- Nivel 2: pantalla principal de lista -->
+    <menuitem
+        id="menu_carga_internacional_list"
+        name="Cargas Internacionales"
+        parent="menu_carga_internacional_main"
+        action="action_carga_internacional"
+        sequence="10"/>
+
+</odoo>
