@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sms_history_list" model="ir.ui.view">
+        <field name="name">interconectados.sms.history.list</field>
+        <field name="model">interconectados.sms.history</field>
+        <field name="arch" type="xml">
+            <list string="Historial de SMS"
+                  decoration-danger="state == 'error'"
+                  decoration-success="state == 'sent'">
+                <field name="date_sent"/>
+                <field name="phone"/>
+                <field name="message"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'sent'"
+                       decoration-danger="state == 'error'"/>
+                <field name="response_code"/>
+                <field name="partner_id"/>
+                <field name="campaign_id"/>
+                <field name="error_message" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sms_history_form" model="ir.ui.view">
+        <field name="name">interconectados.sms.history.form</field>
+        <field name="model">interconectados.sms.history</field>
+        <field name="arch" type="xml">
+            <form string="Detalle SMS">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date_sent"/>
+                            <field name="phone"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'sent'"
+                                   decoration-danger="state == 'error'"/>
+                            <field name="response_code"/>
+                        </group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="move_id"/>
+                            <field name="campaign_id"/>
+                        </group>
+                    </group>
+                    <group string="Mensaje">
+                        <field name="message" widget="text" nolabel="1" readonly="1"/>
+                    </group>
+                    <group string="Error" invisible="state == 'sent'">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_sms_history_search" model="ir.ui.view">
+        <field name="name">interconectados.sms.history.search</field>
+        <field name="model">interconectados.sms.history</field>
+        <field name="arch" type="xml">
+            <search string="Buscar en historial">
+                <field name="phone"/>
+                <field name="message"/>
+                <field name="partner_id"/>
+                <field name="campaign_id"/>
+                <filter name="sent" string="Enviados" domain="[('state','=','sent')]"/>
+                <filter name="errors" string="Errores" domain="[('state','=','error')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_campaign" string="Campana"
+                            context="{'group_by': 'campaign_id'}"/>
+                    <filter name="group_state" string="Estado"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_date" string="Fecha"
+                            context="{'group_by': 'date_sent:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sms_history" model="ir.actions.act_window">
+        <field name="name">Historial de SMS</field>
+        <field name="res_model">interconectados.sms.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

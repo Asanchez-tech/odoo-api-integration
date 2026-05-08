@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_sms" model="ir.ui.view">
+        <field name="name">res.partner.form.sms.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Boton contador de SMS en la caja de stat buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_sms_history"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-comment"
+                        invisible="sms_count == 0">
+                    <field name="sms_count" widget="statinfo" string="SMS"/>
+                </button>
+            </xpath>
+
+            <!-- Boton Enviar SMS junto al campo de telefono principal -->
+            <xpath expr="//field[@name='phone']" position="after">
+                <button string="Enviar SMS"
+                        name="action_send_sms"
+                        type="object"
+                        class="btn btn-sm btn-primary"
+                        icon="fa-comment"
+                        invisible="not phone"/>
+            </xpath>
+
+            <!-- Boton Enviar SMS junto al campo movil -->
+            <xpath expr="//field[@name='mobile']" position="after">
+                <button string="Enviar SMS"
+                        name="action_send_sms_mobile"
+                        type="object"
+                        class="btn btn-sm btn-primary"
+                        icon="fa-comment"
+                        invisible="not mobile"/>
+            </xpath>
+
+            <!-- Pestana de historial SMS al final de las pestanas del contacto -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Historial SMS" name="sms_history_tab"
+                      invisible="sms_count == 0">
+                    <field name="sms_history_ids" readonly="1">
+                        <list decoration-danger="state == 'error'"
+                              decoration-success="state == 'sent'">
+                            <field name="date_sent" string="Fecha"/>
+                            <field name="phone" string="Telefono"/>
+                            <field name="message" string="Mensaje"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'sent'"
+                                   decoration-danger="state == 'error'"
+                                   string="Estado"/>
+                            <field name="campaign_id" string="Campana" optional="show"/>
+                            <field name="response_code" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

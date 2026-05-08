@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sms_template_user,interconectados.sms.template user,model_interconectados_sms_template,base.group_user,1,1,1,0
+access_sms_template_manager,interconectados.sms.template manager,model_interconectados_sms_template,base.group_system,1,1,1,1
+access_sms_campaign_user,interconectados.sms.campaign user,model_interconectados_sms_campaign,base.group_user,1,1,1,0
+access_sms_campaign_manager,interconectados.sms.campaign manager,model_interconectados_sms_campaign,base.group_system,1,1,1,1
+access_sms_history_user,interconectados.sms.history user,model_interconectados_sms_history,base.group_user,1,0,1,0
+access_sms_history_manager,interconectados.sms.history manager,model_interconectados_sms_history,base.group_system,1,1,1,1
+access_sms_wizard_user,interconectados.sms.wizard user,model_interconectados_sms_wizard,base.group_user,1,1,1,1
+access_interconectados_config,interconectados.config,model_interconectados_config,base.group_system,1,1,1,0
+access_interconectados_config_read,interconectados.config read,model_interconectados_config,base.group_user,1,0,0,0

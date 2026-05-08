@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+        web_icon en Odoo 18 para menus raiz de aplicacion:
+        formato: "nombre_tecnico_modulo,ruta/relativa/al/icono"
+        Esto muestra el icono en la barra superior de navegacion.
+    -->
+    <menuitem id="menu_sms_marketing_root"
+              name="SMS Marketing"
+              web_icon="odoo_interconectados_sms_v3,static/description/icon.png"
+              sequence="90"/>
+
+    <!-- PRIMER subitem: Campanas (es lo que se abre al hacer clic en el menu raiz) -->
+    <menuitem id="menu_sms_campaigns"
+              name="Campanas"
+              parent="menu_sms_marketing_root"
+              action="action_sms_campaigns"
+              sequence="10"
+              groups="base.group_user"/>
+
+    <!-- Enviar SMS rapido -->
+    <menuitem id="menu_sms_send"
+              name="Enviar SMS"
+              parent="menu_sms_marketing_root"
+              action="action_interconectados_sms_wizard"
+              sequence="20"
+              groups="base.group_user"/>
+
+    <!-- Plantillas -->
+    <menuitem id="menu_sms_templates"
+              name="Plantillas"
+              parent="menu_sms_marketing_root"
+              action="action_sms_templates"
+              sequence="30"
+              groups="base.group_user"/>
+
+    <!-- Historial -->
+    <menuitem id="menu_sms_history"
+              name="Historial de envios"
+              parent="menu_sms_marketing_root"
+              action="action_sms_history"
+              sequence="40"
+              groups="base.group_user"/>
+
+    <!-- Configuracion (solo admins) -->
+    <menuitem id="menu_sms_config"
+              name="Configuracion"
+              parent="menu_sms_marketing_root"
+              action="action_interconectados_config"
+              sequence="99"
+              groups="base.group_system"/>
+</odoo>

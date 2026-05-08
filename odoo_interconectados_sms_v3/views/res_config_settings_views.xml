@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_interconectados_config_form" model="ir.ui.view">
+        <field name="name">interconectados.config.form</field>
+        <field name="model">interconectados.config</field>
+        <field name="arch" type="xml">
+            <form string="Configuracion SMS — Interconectados.net">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Configuracion del Gateway SMS</h1>
+                    </div>
+                    <group>
+                        <group string="Credenciales de acceso">
+                            <field name="api_user"
+                                   placeholder="tu_usuario"
+                                   string="Usuario API"/>
+                            <field name="api_password"
+                                   password="True"
+                                   placeholder="tu_clave"
+                                   string="Clave API"/>
+                            <field name="api_url"
+                                   string="URL del Gateway"/>
+                            <field name="sender_name"
+                                   placeholder="Mi Empresa (opcional)"
+                                   string="Nombre del remitente"/>
+                        </group>
+                        <group string="Informacion">
+                            <div class="alert alert-info" role="alert">
+                                <strong>Donde obtener las credenciales:</strong><br/>
+                                Sitio web: www.interconectados.net<br/>
+                                Soporte: soporte@interconectados.net<br/><br/>
+                                <strong>Prefijos validos:</strong>
+                                0412, 0414, 0416, 0424, 0426
+                            </div>
+                        </group>
+                    </group>
+                    <group string="Verificar conexion">
+                        <button string="Consultar creditos disponibles"
+                                name="action_check_balance"
+                                type="object"
+                                class="btn btn-secondary"/>
+                        <field name="balance_result"
+                               readonly="1"
+                               nolabel="1"
+                               invisible="not balance_result"
+                               style="color: #28a745; font-weight: bold; margin-top: 8px;"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Accion servidor: abre el singleton de configuracion dinamicamente.
+        Esto evita el error "External ID not found" que ocurre cuando
+        res_id referencia un xmlid que aun no existe al cargar la vista.
+    -->
+    <record id="action_interconectados_config" model="ir.actions.server">
+        <field name="name">Configuracion SMS Interconectados</field>
+        <field name="model_id" search="[('model','=','interconectados.config')]"/>
+        <field name="binding_model_id" eval="False"/>
+        <field name="state">code</field>
+        <field name="code">
+config = env['interconectados.config'].sudo().search([], limit=1)
+if not config:
+    config = env['interconectados.config'].sudo().create({
+        'name': 'Configuracion SMS',
+        'api_url': 'https://www.interconectados.net/api2/',
+    })
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Configuracion SMS Interconectados',
+    'res_model': 'interconectados.config',
+    'view_mode': 'form',
+    'res_id': config.id,
+    'target': 'current',
+    'views': [(False, 'form')],
+}
+        </field>
+    </record>
+</odoo>

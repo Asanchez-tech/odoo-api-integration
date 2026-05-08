@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Registro singleton de configuracion — se crea una sola vez al instalar -->
+        <record id="interconectados_config_default" model="interconectados.config">
+            <field name="name">Configuracion SMS</field>
+            <field name="api_user"></field>
+            <field name="api_password"></field>
+            <field name="api_url">https://www.interconectados.net/api2/</field>
+        </record>
+    </data>
+</odoo>
