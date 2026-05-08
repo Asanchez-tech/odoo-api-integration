@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- List View for API Keys -->
+        <record id="view_api_keys_list" model="ir.ui.view">
+            <field name="name">api.integration.key.list</field>
+            <field name="model">api.integration.key</field>
+            <field name="arch" type="xml">
+                <list string="API Keys" decoration-danger="not active" decoration-warning="expiration_date and expiration_date &lt; current_date">
+                    <field name="name"/>
+                    <field name="key" password="True" invisible="1"/>
+                    <field name="user_id"/>
+                    <field name="company_id"/>
+                    <field name="active"/>
+                    <field name="permissions"/>
+                    <field name="last_used"/>
+                    <field name="usage_count"/>
+                    <field name="expiration_date"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form View for API Keys -->
+        <record id="view_api_keys_form" model="ir.ui.view">
+            <field name="name">api.integration.key.form</field>
+            <field name="model">api.integration.key</field>
+            <field name="arch" type="xml">
+                <form string="API Integration Key">
+                    <header>
+                        <button name="regenerate_key" string="Regenerate Key" type="object" class="btn-warning"/>
+                        <button name="copy_key" string="Show API Key" type="object" class="btn-primary"/>
+                        <button name="action_view_logs" string="View Logs" type="object" class="btn-secondary"/>
+                        <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="Basic Information">
+                                <field name="name" placeholder="e.g., External System Integration"/>
+                                <field name="key" password="True" readonly="1" placeholder="Auto-generated when saving"/>
+                                <field name="user_id" required="1" options="{'no_create': True}"/>
+                                <field name="company_id" required="1" options="{'no_create': True}"/>
+                                <field name="active"/>
+                            </group>
+                            <group string="Permissions &amp; Settings">
+                                <field name="permissions" required="1"/>
+                                <field name="expiration_date" options="{'datepicker': {'minDate': false}}"/>
+                                <field name="created_at" readonly="1"/>
+                                <field name="last_used" readonly="1"/>
+                                <field name="usage_count" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <!-- Security Settings - Only visible for system users -->
+                        <group string="Security Settings" groups="base.group_system">
+                            <group string="Access Control">
+                                <field name="allowed_models" widget="many2many_tags" 
+                                       placeholder="Select allowed models (empty for all)"/>
+                            </group>
+                            <group string="Network Restrictions">
+                                <field name="ip_whitelist" placeholder="192.168.1.1, 10.0.0.1, 203.0.113.0/24" 
+                                       nolabel="1"/>
+                                <label for="ip_whitelist"/>
+                                <div class="text-muted mt-2">
+                                    <i>Comma-separated list of IP addresses or networks allowed to use this key. Leave empty to allow all IPs.</i>
+                                </div>
+                            </group>
+                        </group>
+
+                        <div class="alert alert-info mt-4" role="alert">
+                            <strong>How to use your API Key:</strong> 
+                            <ul class="mb-0 mt-2">
+                                <li>Click "Show API Key" to reveal the key in a notification</li>
+                                <li>Use it in the <strong>X-API-Key</strong> header for API requests</li>
+                                <li>Keep your API Key secure and never share it publicly</li>
+                                <li>Regenerate the key immediately if you suspect it's compromised</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning mt-4" role="alert">
+                            <strong>Permission Levels:</strong> 
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Read Only:</strong> Can only read product and partner data</li>
+                                <li><strong>Read and Write:</strong> Can read data and create sales orders</li>
+                                <li><strong>Full Access:</strong> Full access to all allowed models</li>
+                            </ul>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search View for API Keys -->
+        <record id="view_api_keys_search" model="ir.ui.view">
+            <field name="name">api.integration.key.search</field>
+            <field name="model">api.integration.key</field>
+            <field name="arch" type="xml">
+                <search string="Search API Keys">
+                    <field name="name"/>
+                    <field name="key"/>
+                    <field name="user_id"/>
+                    <field name="company_id"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <filter string="Expired" name="expired" domain="[('expiration_date', '!=', False), ('expiration_date', '&lt;', current_date)]"/>
+                    <filter string="Read Only" name="read_only" domain="[('permissions', '=', 'read_only')]"/>
+                    <filter string="Read Write" name="read_write" domain="[('permissions', '=', 'read_write')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Company" name="group_by_company" context="{'group_by': 'company_id'}"/>
+                        <filter string="User" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                        <filter string="Permissions" name="group_by_permissions" context="{'group_by': 'permissions'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action for API Keys -->
+        <record id="action_api_keys" model="ir.actions.act_window">
+            <field name="name">API Integration Keys</field>
+            <field name="res_model">api.integration.key</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first API Key!
+                </p>
+                <p>
+                    API Keys allow external systems to securely connect to your Odoo instance.
+                    Each key is associated with a specific company and has configurable permissions.
+                    The API key is automatically generated when you save the record.
+                </p>
+            </field>
+        </record>
+
+        <!-- Menu Structure -->
+        <menuitem 
+            id="menu_api_integration" 
+            name="API Integration" 
+            parent="base.menu_administration"
+            sequence="100"
+        />
+        <menuitem 
+            id="menu_api_keys" 
+            name="API Keys" 
+            parent="menu_api_integration"
+            action="action_api_keys"
+            sequence="10"
+        />
+    </data>
+</odoo>

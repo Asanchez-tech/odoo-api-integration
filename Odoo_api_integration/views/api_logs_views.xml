@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- List View for API Logs -->
+        <record id="view_api_logs_list" model="ir.ui.view">
+            <field name="name">api.integration.log.list</field>
+            <field name="model">api.integration.log</field>
+            <field name="arch" type="xml">
+                <list string="API Logs" decoration-danger="status_code >= 400" decoration-success="is_success">
+                    <field name="create_date" string="Date"/>
+                    <field name="api_key_id" string="API Key"/>
+                    <field name="endpoint"/>
+                    <field name="method"/>
+                    <field name="status_code"/>
+                    <field name="ip_address"/>
+                    <field name="duration" string="Duration (ms)"/>
+                    <field name="is_success" invisible="1"/>
+                    <field name="error_message"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form View for API Logs -->
+        <record id="view_api_logs_form" model="ir.ui.view">
+            <field name="name">api.integration.log.form</field>
+            <field name="model">api.integration.log</field>
+            <field name="arch" type="xml">
+                <form string="API Integration Log">
+                    <sheet>
+                        <group>
+                            <group string="Request Information">
+                                <field name="api_key_id" readonly="1"/>
+                                <field name="company_id" readonly="1"/>
+                                <field name="endpoint" readonly="1"/>
+                                <field name="method" readonly="1"/>
+                                <field name="ip_address" readonly="1"/>
+                                <field name="create_date" string="Date" readonly="1"/>
+                            </group>
+                            <group string="Response Information">
+                                <field name="status_code" readonly="1"/>
+                                <field name="duration" readonly="1"/>
+                                <field name="is_success" readonly="1"/>
+                                <field name="user_id" readonly="1"/>
+                                <field name="request_size" readonly="1"/>
+                                <field name="response_size" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Data">
+                            <group string="Request Data">
+                                <field name="request_data" readonly="1" nolabel="1" widget="text"/>
+                            </group>
+                            <group string="Response Data">
+                                <field name="response_data" readonly="1" nolabel="1" widget="text"/>
+                            </group>
+                        </group>
+                        
+                        <!-- Error Information - Only visible when there's an error -->
+                        <group string="Error Information" invisible="is_success">
+                            <field name="error_message" readonly="1" nolabel="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search View for API Logs -->
+        <record id="view_api_logs_search" model="ir.ui.view">
+            <field name="name">api.integration.log.search</field>
+            <field name="model">api.integration.log</field>
+            <field name="arch" type="xml">
+                <search string="Search API Logs">
+                    <field name="api_key_id"/>
+                    <field name="endpoint"/>
+                    <field name="ip_address"/>
+                    <field name="status_code"/>
+                    <filter string="Today" name="today" domain="[('create_date', '>=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                    <filter string="Success" name="success" domain="[('is_success', '=', True)]"/>
+                    <filter string="Errors" name="errors" domain="[('is_success', '=', False)]"/>
+                    <filter string="Last 7 Days" name="last_7_days" domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="API Key" name="group_by_api_key" context="{'group_by': 'api_key_id'}"/>
+                        <filter string="Endpoint" name="group_by_endpoint" context="{'group_by': 'endpoint'}"/>
+                        <filter string="Status Code" name="group_by_status" context="{'group_by': 'status_code'}"/>
+                        <filter string="Date" name="group_by_date" context="{'group_by': 'create_date:day'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action for API Logs -->
+        <record id="action_api_logs" model="ir.actions.act_window">
+            <field name="name">API Integration Logs</field>
+            <field name="res_model">api.integration.log</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_today': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No API logs yet!
+                </p>
+                <p>
+                    API logs will appear here when external systems make requests to your API endpoints.
+                    Use this view to monitor API usage and troubleshoot issues.
+                </p>
+            </field>
+        </record>
+
+        <!-- Menu Item for API Logs -->
+        <menuitem 
+            id="menu_api_logs" 
+            name="API Logs" 
+            parent="menu_api_integration"
+            action="action_api_logs"
+            sequence="20"
+        />
+    </data>
+</odoo>
